@@ -37,6 +37,12 @@ function isLetter(char: string)
     return (c >= 97 && c <= 122) || (c >= 65 && c <= 90);
 }
 
+function isNumber(char: string)
+{
+    const c = char.charCodeAt(0);
+    return (c >= '0'.charCodeAt(0) && c <= '9'.charCodeAt(0));
+}
+
 function charFromTok(tok: Tok)
 {
     switch(tok)
@@ -96,12 +102,13 @@ class Lexer
 {
     index: number;
     text: string;
-    punctuators: Map<String, Tok>;
+    punctuators: Map<string, Tok>;
 
     constructor(text)
     {
         this.index = 0;
         this.text = text;
+        this.punctuators = new Map<string, Tok>;
 
         for (let i = 0; i < Tok.TOK_COUNT; i++)
         {
@@ -117,6 +124,10 @@ class Lexer
     {
         let result = new Token(Tok.EOF, "");
 
+        const isNameChar = (char) => {
+            return isLetter(char) || isNumber(char)
+        }
+
         while(this.index < this.text.length)
         {
             const char = this.text[this.index++];
@@ -126,13 +137,13 @@ class Lexer
                 result = new Token(this.punctuators.get(char)!, char);
                 break;
             }
-            else if (isLetter(char))
+            else if (isNameChar(char))
             {
                 const start = this.index - 1;
 
                 while (this.index < this.text.length)
                 {
-                    if (!isLetter(this.text[this.index]))
+                    if (!isNameChar(this.text[this.index]))
                     {
                         break;
                     }
@@ -312,3 +323,23 @@ class OperatorExpr extends Expr
         this.right = right;
     }
 }
+
+// -------[ TEST ]------- //
+const source="5+4";
+const lexer = new Lexer(source);
+const tokens: Array<Token> = [];
+
+while (true)
+{
+    const token = lexer.next();
+    tokens.push(token);
+
+    if (token.type === Tok.EOF)
+    {
+        break;
+    }
+}
+
+const parser = new Parser(tokens);
+const result = parser.parseExpression();
+console.log("Done");

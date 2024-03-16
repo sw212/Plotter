@@ -1,2 +1,6 @@
 obj/
 bin/
+out/
+.vscode/
+
+tsconfig.json
