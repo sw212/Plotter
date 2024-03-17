@@ -3,17 +3,12 @@ enum Tok
 {
     LEFT_PAREN,
     RIGHT_PAREN,
-    COMMA,
     ASSIGN,
     PLUS,
     MINUS,
     ASTERISK,
     SLASH,
     CARET,
-    TILDE,
-    BANG,
-    QUESTION,
-    COLON,
     NAME,
     EOF,
     TOK_COUNT,
@@ -47,20 +42,15 @@ function charFromTok(tok: Tok)
 {
     switch(tok)
     {
-        case Tok.LEFT_PAREN:  { return '(' }
-        case Tok.RIGHT_PAREN: { return ')' }
-        case Tok.COMMA:       { return ',' }
-        case Tok.ASSIGN:      { return '=' }
-        case Tok.PLUS:        { return '+' }
-        case Tok.MINUS:       { return '-' }
-        case Tok.ASTERISK:    { return '*' }
-        case Tok.SLASH:       { return '/' }
-        case Tok.CARET:       { return '^' }
-        case Tok.TILDE:       { return '~' }
-        case Tok.BANG:        { return '!' }
-        case Tok.QUESTION:    { return '?' }
-        case Tok.COLON:       { return ':' }
-        default:              { return null}
+        case Tok.LEFT_PAREN:  { return '('  }
+        case Tok.RIGHT_PAREN: { return ')'  }
+        case Tok.ASSIGN:      { return '='  }
+        case Tok.PLUS:        { return '+'  }
+        case Tok.MINUS:       { return '-'  }
+        case Tok.ASTERISK:    { return '*'  }
+        case Tok.SLASH:       { return '/'  }
+        case Tok.CARET:       { return '^'  }
+        default:              { return null }
     }
 }
 
@@ -70,17 +60,12 @@ function stringFromTok(tok: Tok)
     {
         case Tok.LEFT_PAREN:  { return 'LEFT_PAREN'  }
         case Tok.RIGHT_PAREN: { return 'RIGHT_PAREN' }
-        case Tok.COMMA:       { return 'COMMA'       }
         case Tok.ASSIGN:      { return 'ASSIGN'      }
         case Tok.PLUS:        { return 'PLUS'        }
         case Tok.MINUS:       { return 'MINUS'       }
         case Tok.ASTERISK:    { return 'ASTERISK'    }
         case Tok.SLASH:       { return 'SLASH'       }
         case Tok.CARET:       { return 'CARET'       }
-        case Tok.TILDE:       { return 'TILDE'       }
-        case Tok.BANG:        { return 'BANG'        }
-        case Tok.QUESTION:    { return 'QUESTION'    }
-        case Tok.COLON:       { return 'COLON'       }
         case Tok.NAME:        { return 'NAME'        }
         case Tok.EOF:         { return 'EOF'         }
     }   
@@ -217,10 +202,6 @@ class Parser
 
     peek(distance: number)
     {
-        //
-        // unsure about what distance is here?
-        //
-
         while (distance >= this.seenTokens.length)
         {
             const token = this.next();
