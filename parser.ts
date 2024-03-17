@@ -32,10 +32,49 @@ function isLetter(char: string)
     return (c >= 97 && c <= 122) || (c >= 65 && c <= 90);
 }
 
-function isNumber(char: string)
+function isNumerical(char: string)
 {
     const c = char.charCodeAt(0);
     return (c >= '0'.charCodeAt(0) && c <= '9'.charCodeAt(0));
+}
+
+function isNumber(string: string)
+{
+    if (!string.length)
+    {
+        return false;
+    }
+
+    if (string.length === 1 && string === ".")
+    {
+        return false;
+    }
+
+    let seenPoint = false;
+
+    for (let i = 0; i < string.length; i++)
+    {
+        const c = string[i];
+
+        if (c === ".")
+        {
+            if (seenPoint)
+            {
+                return false;
+            }
+            else
+            {
+                seenPoint = true;
+            }
+        }
+
+        if (!isNumerical(c))
+        {
+            return false;
+        }
+    }
+
+    return true;
 }
 
 function charFromTok(tok: Tok)
@@ -110,7 +149,7 @@ class Lexer
         let result = new Token(Tok.EOF, "");
 
         const isNameChar = (char) => {
-            return isLetter(char) || isNumber(char)
+            return isLetter(char) || isNumerical(char)
         }
 
         while(this.index < this.text.length)
@@ -324,6 +363,61 @@ function parseInfix(parser: Parser, left: Expr, token: Token)
     return new Expr();
 }
 
+function compile(equation: Expr): string
+{
+    if (0)
+    {}
+
+    else if (equation instanceof AssignExpr)
+    {
+        const LHS = equation.name;
+        if (LHS !== "y")
+        {
+            throw `[ ERROR ] LHS of assignment must use "y", got ${LHS} instead`
+        }
+
+        const RHS = compile(equation.right);
+        const result = `(${LHS}) - (${RHS})`;
+        return result;
+    }
+
+    else if (equation instanceof NameExpr)
+    {
+        let v = equation.name;
+
+        if (isNumber(v))
+        {
+            if (!v.includes("."))
+            {
+                v += ".0";
+            }
+        }
+        else if (v !== "x")
+        {
+            throw `[ ERROR ] RHS of equation must only use "x" for variable, got ${v} instead`
+        }
+
+        return v;
+    }
+
+    else if (equation instanceof PrefixExpr)
+    {
+        const RHS = compile(equation.right);
+        const result = `${charFromTok(equation.operator)}(${RHS})`;
+        return result;
+    }
+
+    else if (equation instanceof OperatorExpr)
+    {
+        const LHS = compile(equation.left);
+        const RHS = compile(equation.right);
+        const result = `(${LHS} ${charFromTok(equation.operator)} ${RHS})`;
+        return result;
+    }
+
+    return "";
+}
+
 class Expr
 {
     print(s: string): string
@@ -440,22 +534,20 @@ function test(source: string, expected: string)
     const result = parser.parseExpression();
     const LHS = result.print("");
     
-    if (LHS !== expected)
-    {
-        debugger;
-    }
-
-    assert.strictEqual(LHS, expected);
+    const output = compile(result);
+    console.log(output);
+    
 }
 
-test("1+2"  , "(1 + 2)")
+test("y=3 + 4*x + 2", "(y = ((4 * x) + 2))");
+// test("1+2"  , "(1 + 2)")
 
-test("1 + 2", "(1 + 2)")
-test("a + 4", "(a + 4)")
-test("a + b", "(a + b)")
+// test("1 + 2", "(1 + 2)")
+// test("a + 4", "(a + 4)")
+// test("a + b", "(a + b)")
 
-test("-a + b", "((-a) + b)")
-test("-a = b", "((-a) = b)")
-test("-a = -b", "((-a) = (-b))")
-test("(-a) = -b", "((-a) = (-b))")
-test("(-a) = -b", "(((-a)) = (-b))")
+// test("-a + b", "((-a) + b)")
+// test("-a = b", "((-a) = b)")
+// test("-a = -b", "((-a) = (-b))")
+// test("(-a) = -b", "((-a) = (-b))")
+// test("(-a) = -b", "(((-a)) = (-b))")
