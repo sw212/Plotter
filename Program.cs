@@ -17,6 +17,9 @@ Point   axisY_End = new Point(screenWidth/2, screenHeight);
 InitWindow(screenWidth, screenHeight, "Plotter");
 Camera2D camera = new Camera2D(offset: Vector2.Zero, target: Vector2.Zero, rotation: 0.0f, zoom: 1.0f);
 
+RenderTexture2D target = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
+Shader shader = LoadShader("", "shader.glsl");
+
 float[] LinSpace(float start, float end, int n)
 {
     float[] result = new float[n];
@@ -128,19 +131,31 @@ void DrawEquation()
     }
 }
 
-
+SetTargetFPS(60);
 
 while(!WindowShouldClose())
 {
     HandleInput();
 
+    BeginTextureMode(target);
+    {
+        DrawRectangle(0, 0, GetScreenWidth(), GetScreenHeight(), RL.Color.Black);
+    }
+    EndTextureMode();
+
     BeginDrawing();
     {
         ClearBackground(RL.Color.RayWhite);
         
-        DrawText("Equation", 10, 10, 20, RL.Color.Black);
-        DrawAxis();
-        DrawEquation();
+        // DrawText("Equation", 10, 10, 20, RL.Color.Black);
+        // DrawAxis();
+        // DrawEquation();
+
+        BeginShaderMode(shader);
+        {
+            DrawTexture(target.Texture, 0, 0, RL.Color.White);
+        }
+        EndShaderMode();
     }
     EndDrawing();
 }
