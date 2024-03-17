@@ -176,15 +176,27 @@ class Parser
         this.seenTokens = [];
     }
 
-    getPrecedence()
+    getInfixPrecedence()
     {
         const tok = this.peek(0).type;
 
         switch(tok)
         {
             case Tok.PLUS:
+            case Tok.MINUS:
             {
                 return Precedence.SUM;
+            }
+
+            case Tok.ASTERISK:
+            case Tok.SLASH:
+            {
+                return Precedence.PRODUCT;
+            }
+
+            case Tok.ASSIGN:
+            {
+                return Precedence.ASSIGNMENT;
             }
         }
 
@@ -253,7 +265,7 @@ class Parser
 
         let left = parsePrefix(this, token);
 
-        while(precedence < this.getPrecedence())
+        while(precedence < this.getInfixPrecedence())
         {
             token = this.consume();
             
@@ -273,6 +285,20 @@ function parsePrefix(parser: Parser, token: Token): Expr
             const result = new NameExpr(token.text);
             return result;
         }
+
+        case Tok.LEFT_PAREN:
+        {
+            const result = parser.parseExpression();
+            parser.consume(Tok.RIGHT_PAREN);
+            return result;
+        }
+
+        case Tok.MINUS:
+        {
+            const right = parser.parseExpression(Precedence.PREFIX);
+            const result = new PrefixExpr(token.type, right);
+            return result;
+        }
     }
 
     return new Expr();
@@ -282,10 +308,34 @@ function parseInfix(parser: Parser, left: Expr, token: Token)
 {
     switch (token.type)
     {
+        // -----[ arithmetic ]----- //
         case Tok.PLUS:
+        case Tok.MINUS:
         {
             const right = parser.parseExpression(Precedence.SUM);
             const result = new OperatorExpr(left, token.type, right);
+            return result;
+        }
+
+        case Tok.ASTERISK:
+        case Tok.SLASH:
+        {
+            const right = parser.parseExpression(Precedence.PRODUCT);
+            const result = new OperatorExpr(left, token.type, right);
+            return result;
+        }
+
+        // -----[ assign ]----- //
+        case Tok.ASSIGN:
+        {
+            if (!(left instanceof NameExpr))
+            {
+                throw `[ ERROR ] LHS of assignment must be a name expression`;
+            }
+
+            const right = parser.parseExpression(Precedence.ASSIGNMENT - 1);
+            const name = left.name;
+            const result = new AssignExpr(name, right);
             return result;
         }
     }
@@ -295,7 +345,11 @@ function parseInfix(parser: Parser, left: Expr, token: Token)
 
 class Expr
 {
-
+    print(s: string): string
+    {
+        s += "☐";
+        return s;
+    }
 }
 
 class NameExpr extends Expr
@@ -306,6 +360,54 @@ class NameExpr extends Expr
     {
         super();
         this.name = name;
+    }
+
+    print(s: string): string
+    {
+        s += this.name;
+        return s;
+    }
+}
+
+class AssignExpr extends Expr
+{
+    name: string;
+    right: Expr;
+
+    constructor(name: string, right: Expr)
+    {
+        super();
+        this.name = name;
+        this.right = right;
+    }
+
+    print(s: string): string
+    {
+        s += `(${this.name} = `
+        s  = this.right.print(s);
+        s += ")";
+        return s;
+    }
+}
+
+class PrefixExpr extends Expr
+{
+    operator: Tok;
+    right: Expr;
+
+    constructor(operator: Tok, right: Expr)
+    {
+        super();
+        this.operator = operator;
+        this.right = right;
+    }
+
+    print(s: string): string
+    {
+        s += `(${charFromTok(this.operator)}`;
+        s  = this.right.print(s);
+        s += ")";
+        return s;
     }
 }
 
@@ -322,24 +424,57 @@ class OperatorExpr extends Expr
         this.operator = operator;
         this.right = right;
     }
-}
 
-// -------[ TEST ]------- //
-const source="5+4";
-const lexer = new Lexer(source);
-const tokens: Array<Token> = [];
-
-while (true)
-{
-    const token = lexer.next();
-    tokens.push(token);
-
-    if (token.type === Tok.EOF)
+    print(s: string): string
     {
-        break;
+        s += "("
+        s  = this.left.print(s);
+        s += ` ${charFromTok(this.operator)} `;
+        s  = this.right.print(s); 
+        s += ")";
+        return s;
     }
 }
 
-const parser = new Parser(tokens);
-const result = parser.parseExpression();
-console.log("Done");
+// -------[ TEST ]------- //
+const assert = require("node:assert/strict");
+
+function test(source: string, expected: string)
+{
+    const lexer = new Lexer(source);
+    const tokens: Array<Token> = [];
+
+    while (true)
+    {
+        const token = lexer.next();
+        tokens.push(token);
+
+        if (token.type === Tok.EOF)
+        {
+            break;
+        }
+    }
+
+    const parser = new Parser(tokens);
+    const result = parser.parseExpression();
+    const LHS = result.print("");
+    
+    if (LHS !== expected)
+    {
+        debugger;
+    }
+
+    assert.strictEqual(LHS, expected);
+}
+
+test("1+2"  , "(1 + 2)")
+
+test("1 + 2", "(1 + 2)")
+test("a + 4", "(a + 4)")
+test("a + b", "(a + b)")
+
+test("-a + b", "((-a) + b)")
+test("-a = b", "((-a) = b)")
+test("-a = -b", "((-a) = (-b))")
+test("(-a) = -b", "((-a) = (-b))")
+test("(-a) = -b", "(((-a)) = (-b))")
