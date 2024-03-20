@@ -1,5 +1,7 @@
 #version 330
 
+uniform vec4 axisRange; // (xLo, xHi, yLo, yHi)
+
 in  vec2 fragTexCoord;
 in  vec4 fragColor;
 out vec4 finalColor;
@@ -13,11 +15,14 @@ float plot(float x, float y)
 
 void main()
 {
-    vec2 p = fragTexCoord - 0.5;
-    p *= 5.0;
+    // vec2 p = fragTexCoord - 0.5;
+    // p *= 5.0;
+    vec2 p = fragTexCoord;
+    float x = axisRange.x + (axisRange.y - axisRange.x) * p.x;
+    float y = axisRange.z + (axisRange.w - axisRange.z) * (1.0 - p.y);
 
-    float x = p.x;
-    float y = -p.y;
+    // float x = p.x;
+    // float y = -p.y;
     // get uv deltas for neighbouring pixels
     float dx = dFdx(x);
     float dy = dFdy(y);

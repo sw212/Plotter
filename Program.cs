@@ -1,4 +1,4 @@
-﻿using System.Drawing;
+using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using RL = Raylib_cs;
@@ -94,8 +94,8 @@ void DrawAxis()
     DrawText(xLo, axisX_Start.X + 5, axisX_Start.Y + 5, 12, RL.Color.Black);
     DrawText(xHi, axisX_End.X - 20, axisX_End.Y + 5, 12, RL.Color.Black);
 
-    DrawText(yLo, axisY_Start.X - 25, axisY_Start.Y + 5, 12, RL.Color.Black);
-    DrawText(yHi, axisY_End.X - 25, axisY_End.Y -15, 12, RL.Color.Black);
+    DrawText(yHi, axisY_Start.X - 25, axisY_Start.Y + 5, 12, RL.Color.Black);
+    DrawText(yLo, axisY_End.X - 25, axisY_End.Y -15, 12, RL.Color.Black);
 }
 
 void DrawEquation()
@@ -148,11 +148,16 @@ while(!WindowShouldClose())
         ClearBackground(RL.Color.RayWhite);
         
         // DrawText("Equation", 10, 10, 20, RL.Color.Black);
-        // DrawAxis();
+        DrawAxis();
         // DrawEquation();
 
         BeginShaderMode(shader);
         {
+            var (xRange, yRange) = GetAxisRange();
+            Vector4 axisRange = new Vector4(xRange.X, xRange.Y, yRange.X, yRange.Y);
+            int axisLoc = GetShaderLocation(shader, "axisRange");
+            SetShaderValue<Vector4>(shader, axisLoc, axisRange, ShaderUniformDataType.Vec4);
+        
             DrawTexture(target.Texture, 0, 0, RL.Color.White);
         }
         EndShaderMode();
