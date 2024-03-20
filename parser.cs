@@ -167,3 +167,45 @@ public class Parser
         return result;
     }
 }
+
+public static class Equation
+{
+    public static string Compile(Expr equation)
+    {
+        if (false)
+        {}
+
+        else if (equation is AssignExpr assignExpr)
+        {
+            string LHS = assignExpr.Name;
+            string RHS = Compile(assignExpr.Right);
+            string result = $"({LHS}) - (${RHS})";
+            return result;
+        }
+
+        else if (equation is VarExpr varExpr)
+        {
+            return varExpr.Name;
+        }
+
+        else if (equation is PrefixExpr prefixExpr)
+        {
+            string RHS = Compile(prefixExpr.Right);
+            string result = $"(${Lexer.CharFromTok(prefixExpr.Operator)}${RHS})";
+            return result;
+        }
+
+        else if (equation is OperatorExpr operatorExpr)
+        {
+            string LHS = Compile(operatorExpr.Left);
+            string RHS = Compile(operatorExpr.Right);
+            string result = $"({LHS} ${Lexer.CharFromTok(operatorExpr.Operator)} ${RHS})";
+            return result;
+        }
+
+        else
+        {
+            return "";
+        }
+    }
+}
