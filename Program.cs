@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Numerics;
 using Raylib_cs;
 using RL = Raylib_cs;
@@ -19,6 +19,14 @@ Camera2D camera = new Camera2D(offset: Vector2.Zero, target: Vector2.Zero, rotat
 
 RenderTexture2D target = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 Shader shader = LoadShader("", "shader.glsl");
+
+//
+string source = "-a = b";
+Lexer lexer = new Lexer(source);
+Parser parser = new Parser(lexer);
+Expr result = parser.ParseExpression(Precedence.LOWEST);
+string LHS = result.Print("");
+//
 
 float[] LinSpace(float start, float end, int n)
 {
