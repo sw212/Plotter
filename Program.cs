@@ -18,14 +18,16 @@ InitWindow(screenWidth, screenHeight, "Plotter");
 Camera2D camera = new Camera2D(offset: Vector2.Zero, target: Vector2.Zero, rotation: 0.0f, zoom: 1.0f);
 
 RenderTexture2D target = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
-Shader shader = LoadShader("", "shader.glsl");
 
 //
-string source = "-a = b";
+string source = "y = -4x";
 Lexer lexer = new Lexer(source);
 Parser parser = new Parser(lexer);
-Expr result = parser.ParseExpression(Precedence.LOWEST);
-string LHS = result.Print("");
+Expr equationExpr = parser.ParseExpression(Precedence.LOWEST);
+// string LHS = result.Print("");
+string equationShader = Equation.Compile(equationExpr);
+// Shader shader = LoadShaderFromMemory("", equationShader);
+Shader shader = LoadShader("", "shader_full.glsl");
 //
 
 float[] LinSpace(float start, float end, int n)

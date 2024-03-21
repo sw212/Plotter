@@ -18,7 +18,12 @@ public class Parser
 
         while (precedence < GetInfixPrecedence())
         {
-            token = Consume();
+            //
+            // for cases such as "4x", we must peek becuase otherwise we 
+            // would consume the "x". This would be bad if there were further
+            // terms that happen to form a statement that included such "x"
+            //
+            token = Peek(0);
 
             left = ParseInfix(left, token);
         }
@@ -84,6 +89,7 @@ public class Parser
                 return Precedence.SUM;
             }
 
+            case Tok.VAR:
             case Tok.ASTERISK:
             case Tok.SLASH:
             {
@@ -113,6 +119,11 @@ public class Parser
                 result = new VarExpr(token.Text);
             } break;
 
+            case Tok.NUMBER:
+            {
+                result = new NumberExpr(token.Text);
+            } break;
+
             case Tok.LEFT_PAREN:
             {
                 result = ParseExpression(Precedence.LOWEST);
@@ -138,19 +149,28 @@ public class Parser
             case Tok.PLUS:
             case Tok.MINUS:
             {
+                Consume();
                 Expr right = ParseExpression(Precedence.SUM);
                 result = new OperatorExpr(left, token.Type, right);
+            } break;
+
+            case Tok.VAR:
+            {
+                Expr right = ParseExpression(Precedence.PRODUCT);
+                result = new OperatorExpr(left, Tok.ASTERISK, right);
             } break;
 
             case Tok.ASTERISK:
             case Tok.SLASH:
             {
+                Consume();
                 Expr right = ParseExpression(Precedence.PRODUCT);
                 result = new OperatorExpr(left, token.Type, right);
             } break;
 
             case Tok.ASSIGN:
             {
+                Consume();
                 if (left is VarExpr l)
                 {
                     Expr right = ParseExpression(Precedence.ASSIGNMENT - 1);
@@ -165,47 +185,5 @@ public class Parser
         }
 
         return result;
-    }
-}
-
-public static class Equation
-{
-    public static string Compile(Expr equation)
-    {
-        if (false)
-        {}
-
-        else if (equation is AssignExpr assignExpr)
-        {
-            string LHS = assignExpr.Name;
-            string RHS = Compile(assignExpr.Right);
-            string result = $"({LHS}) - (${RHS})";
-            return result;
-        }
-
-        else if (equation is VarExpr varExpr)
-        {
-            return varExpr.Name;
-        }
-
-        else if (equation is PrefixExpr prefixExpr)
-        {
-            string RHS = Compile(prefixExpr.Right);
-            string result = $"(${Lexer.CharFromTok(prefixExpr.Operator)}${RHS})";
-            return result;
-        }
-
-        else if (equation is OperatorExpr operatorExpr)
-        {
-            string LHS = Compile(operatorExpr.Left);
-            string RHS = Compile(operatorExpr.Right);
-            string result = $"({LHS} ${Lexer.CharFromTok(operatorExpr.Operator)} ${RHS})";
-            return result;
-        }
-
-        else
-        {
-            return "";
-        }
     }
 }

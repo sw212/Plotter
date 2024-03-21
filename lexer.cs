@@ -136,13 +136,13 @@ public class Lexer
 
                 while(Index < Text.Length)
                 {
-                    if (!Char.IsAsciiDigit(Text[Index]) && c != '.')
+                    if (Char.IsAsciiDigit(Text[Index]) || c == '.')
                     {
-                        break;
+                        Index++;
                     }
                     else
                     {
-                        Index++;
+                        break;
                     }
                 }
 

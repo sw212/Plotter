@@ -6,6 +6,13 @@ in  vec2 fragTexCoord;
 in  vec4 fragColor;
 out vec4 finalColor;
 
+float plot(float x, float y)
+{
+    float z = y - x;
+    z = y - sin(x);
+    return z;
+}
+
 void main()
 {
     vec2 p = fragTexCoord;

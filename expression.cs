@@ -23,6 +23,22 @@ public class VarExpr : Expr
     }
 }
 
+public class NumberExpr : Expr
+{
+    public string Value;
+
+    public NumberExpr(string value)
+    {
+        Value = value;
+    }
+
+    public override string Print(string s)
+    {
+        s += Value;
+        return s;
+    }
+}
+
 public class AssignExpr : Expr
 {
     public string Name;
