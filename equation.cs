@@ -51,6 +51,8 @@ public static class Equation
         """;
 
         string result = String.Join(compiledEqn, parts);
+        // File.WriteAllText("./output.glsl", result);
+
         return result;
     }
 

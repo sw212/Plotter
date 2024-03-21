@@ -3,6 +3,7 @@ using System.Numerics;
 using Raylib_cs;
 using RL = Raylib_cs;
 using static Raylib_cs.Raylib;
+using System.ComponentModel;
 
 const int screenWidth  = 800;
 const int screenHeight = 450;
@@ -19,16 +20,22 @@ Camera2D camera = new Camera2D(offset: Vector2.Zero, target: Vector2.Zero, rotat
 
 RenderTexture2D target = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
-//
 string source = "y = -4x";
-Lexer lexer = new Lexer(source);
+Lexer   lexer = new Lexer(source);
 Parser parser = new Parser(lexer);
-Expr equationExpr = parser.ParseExpression(Precedence.LOWEST);
-// string LHS = result.Print("");
+
+Expr     equationExpr = parser.ParseExpression(Precedence.LOWEST);
 string equationShader = Equation.Compile(equationExpr);
-// Shader shader = LoadShaderFromMemory("", equationShader);
-Shader shader = LoadShader("", "shader_full.glsl");
 //
+// when only providing a fragment shader, 
+// it seems we have to either read shaders from file, or use unsafe block...
+//
+Shader shader;
+unsafe
+{
+    Utf8Buffer eqnBuffer = equationShader.ToUtf8Buffer();
+    shader = LoadShaderFromMemory((sbyte*)0, eqnBuffer.AsPointer());
+}
 
 float[] LinSpace(float start, float end, int n)
 {
