@@ -1,6 +1,104 @@
+using Raylib_cs;
+using static Raylib_cs.Raylib;
+
 public static class Equation
 {
-    public static string Compile(Expr equation)
+    public static void CompileEquation(ref Shader shader, string equation)
+    {
+        Lexer   lexer = new Lexer(equation);
+        Parser parser = new Parser(lexer);
+
+        Expr equationExpr = parser.ParseExpression(Precedence.LOWEST);
+
+        bool validEquation = CheckEquation(equationExpr);
+
+        if (!validEquation)
+        {
+            Console.WriteLine("[ ERROR ] invalid shader");
+            return;
+        }
+        else
+        {
+            UnloadShader(shader);
+        }
+
+        string equationShader = Equation.GenerateShader(equationExpr);
+        //
+        // when only providing a fragment shader, 
+        // it seems we have to either read shaders from file, or use unsafe block...
+        //
+        unsafe
+        {
+            Utf8Buffer eqnBuffer = equationShader.ToUtf8Buffer();
+            shader = LoadShaderFromMemory((sbyte*)0, eqnBuffer.AsPointer());
+        }
+    }
+
+    public static bool CheckEquation(Expr equation)
+    {
+        if (false)
+        {}
+
+        else if (equation is AssignExpr assignExpr)
+        {
+            string LHS = assignExpr.Name;
+            if (LHS != "y")
+            {
+                return false;
+            }
+            else
+            {
+                return CheckEquation(assignExpr.Right);
+            }
+        }
+
+        else if (equation is VarExpr varExpr)
+        {
+            return varExpr.Name == "x";
+        }
+
+        else if (equation is NumberExpr numberExpr)
+        {
+            return true;
+        }
+
+        else if (equation is PrefixExpr prefixExpr)
+        {
+            Tok op = prefixExpr.Operator;
+            Tok[] allowedOps = [Tok.PLUS, Tok.MINUS];
+            bool validOp = allowedOps.Any(allowedOp => op == allowedOp);
+            if (!allowedOps.Any(allowedOp => op == allowedOp))
+            {
+                return false;
+            }
+            else
+            {
+                return (prefixExpr.Right is NumberExpr || prefixExpr.Right is VarExpr) && CheckEquation(prefixExpr.Right);
+            }
+        }
+
+        else if (equation is OperatorExpr operatorExpr)
+        {
+            Tok op = operatorExpr.Operator;
+            Tok[] allowedOps = [Tok.PLUS, Tok.MINUS, Tok.ASTERISK, Tok.SLASH];
+            bool validOp = allowedOps.Any(allowedOp => op == allowedOp);
+            if (!allowedOps.Any(allowedOp => op == allowedOp))
+            {
+                return false;
+            }
+            else
+            {
+                return CheckEquation(operatorExpr.Left) && CheckEquation(operatorExpr.Right);
+            }
+        }
+
+        else
+        {
+            return false;
+        }
+    }
+
+    public static string GenerateShader(Expr equation)
     {
         string source = 
         """
@@ -19,7 +117,7 @@ public static class Equation
             float x = axisRange.x + (axisRange.y - axisRange.x) * p.x;
             float y = axisRange.z + (axisRange.w - axisRange.z) * (1.0 - p.y);
 
-            // get uv deltas for neighbouring pixels
+            // get coord deltas for neighbouring pixels
             float dx = dFdx(x);
             float dy = dFdy(y);
 
@@ -51,7 +149,6 @@ public static class Equation
         """;
 
         string result = String.Join(compiledEqn, parts);
-        // File.WriteAllText("./output.glsl", result);
 
         return result;
     }
