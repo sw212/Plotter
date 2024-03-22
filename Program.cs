@@ -33,7 +33,7 @@ string equationText = "y = -4x * x + 2";
 Shader shader = new Shader();
 Equation.CompileEquation(ref shader, equationText);
 
-void HandleInput()
+void HandleZoomInput()
 {
     float zoomModifier = 0.0f;
 
@@ -146,7 +146,7 @@ while(!WindowShouldClose())
 {
     time += GetFrameTime();
 
-    HandleInput();
+    HandleZoomInput();
     HandleEquationTextKeyInput();
     HandleEquationTextMouseInput();
 
