@@ -3,6 +3,7 @@ using System.Numerics;
 using Raylib_cs;
 using RL = Raylib_cs;
 using static Raylib_cs.Raylib;
+using System.Diagnostics;
 
 const int screenWidth  = 800;
 const int screenHeight = 450;
@@ -18,11 +19,13 @@ Point   axisX_End = new Point(screenWidth, screenHeight/2);
 Point axisY_Start = new Point(screenWidth/2, 0);
 Point   axisY_End = new Point(screenWidth/2, screenHeight);
 
+
 InitWindow(screenWidth, screenHeight, "Plotter");
 RenderTexture2D target = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
 Font font = Utils.MakeFont("./resources/fonts/NotoSans.ttf", FONT_SIZE);
 
+Vector2 centreAt = new Vector2(0f, 0f);
 Camera2D camera = new Camera2D(offset: Vector2.Zero, target: Vector2.Zero, rotation: 0.0f, zoom: 1.0f);
 
 Vector2 equationCompileExtent = MeasureTextEx(font, "Compile", FONT_SIZE, 0.0f);
@@ -32,6 +35,16 @@ RL.Rectangle equationTextRect = new RL.Rectangle(10.0f, 10.0f, 300.0f, 30.0f);
 string equationText = "y = -4x * x + 2";
 Shader shader = new Shader();
 Equation.CompileEquation(ref shader, equationText);
+
+void HandleNavigateInput()
+{
+    if (IsMouseButtonDown(MouseButton.Left))
+    {
+        Vector2 delta = GetMouseDelta();
+        delta.Y *= -1f;
+        centreAt -= camera.Zoom * delta * (screenAspect / GetScreenHeight());
+    }
+}
 
 void HandleZoomInput()
 {
@@ -117,6 +130,11 @@ void DrawEquationRects()
     xRange *= camera.Zoom * screenAspect;
     yRange *= camera.Zoom;
 
+    xRange.X += centreAt.X;
+    xRange.Y += centreAt.X;
+    yRange.X += centreAt.Y;
+    yRange.Y += centreAt.Y;
+
     return (xRange, yRange);
 }
 
@@ -140,6 +158,69 @@ void DrawAxis()
     DrawText(yLo, axisY_End.X - 25, axisY_End.Y -15, 12, RL.Color.Black);
 }
 
+void DrawGrid()
+{
+    float s = camera.Zoom;
+
+    var (xRange, yRange) = GetAxisRange();
+
+    double OoM = Math.Pow(10.0, Math.Round(Math.Log((double)s * 32.0) / Math.Log(10.0)));
+    double scale = s / OoM;
+    
+    var l = (GetScreenHeight() / (2f * s)) * (centreAt.X - screenAspect * s);
+    var r = (GetScreenHeight() / (2f * s)) * (centreAt.X + screenAspect * s);
+
+    int xLoIdx = (int)Math.Ceiling(l * scale);
+    int xHiIdx = (int)Math.Ceiling(r * scale);
+
+    for (int xIdx = xLoIdx; xIdx < xHiIdx; xIdx++)
+    {
+        float xAt = (float)(-l + (xIdx /scale));
+        Vector2 from = new Vector2(xAt, 0f);
+        Vector2 to   = new Vector2(xAt, GetScreenHeight());
+
+        float thick = 1f;
+        RL.Color color = (xIdx % 10) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
+        if (xIdx == 0)
+        {
+            thick = 2f;
+            color = RL.Color.Black;
+        }
+
+        DrawLineEx(from, to, thick, color);
+    }
+
+    var b = (GetScreenHeight() / (2f * s)) * (centreAt.Y - s);
+    var t = (GetScreenHeight() / (2f * s)) * (centreAt.Y + s);
+
+    int yLoIdx = (int)Math.Ceiling(b * scale);
+    int yHiIdx = (int)Math.Ceiling(t * scale);
+
+    // Console.WriteLine($"s:{s}   OoM:{OoM}   scale=OoM/s:{scale:F2}   ({xLoIdx}, {xHiIdx})    ({l:F2}, {r:F2})");
+
+    for (int yIdx = yLoIdx; yIdx < yHiIdx; yIdx++)
+    {
+        float yAt = GetScreenHeight() - (float)(-b + (yIdx /scale));
+        Vector2 from = new Vector2(0f, yAt);
+        Vector2 to   = new Vector2(GetScreenWidth(), yAt);
+
+        float thick = 1f;
+        RL.Color color = (yIdx % 8) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
+        if (yIdx == 0)
+        {
+            thick = 2f;
+            color = RL.Color.Black;
+        }
+
+        DrawLineEx(from, to, thick, color);
+    }
+
+    if (IsKeyPressed(KeyboardKey.RightShift))
+    {
+        Debugger.Break();
+    }
+}
+
 SetTargetFPS(60);
 
 while(!WindowShouldClose())
@@ -147,6 +228,7 @@ while(!WindowShouldClose())
     time += GetFrameTime();
 
     HandleZoomInput();
+    HandleNavigateInput();
     HandleEquationTextKeyInput();
     HandleEquationTextMouseInput();
 
@@ -160,7 +242,8 @@ while(!WindowShouldClose())
     {
         ClearBackground(RL.Color.RayWhite);
         
-        DrawAxis();
+        // DrawAxis();
+        DrawGrid();
         DrawEquationRects();
 
         BeginShaderMode(shader);
