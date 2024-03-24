@@ -54,11 +54,12 @@ void HandleZoomInput()
     float wheel = GetMouseWheelMove();
     zoomModifier -= wheel * wheelFactor;
 
-    float arrowFactor = 0.01f;
+    float arrowFactor = 0.1f;
     float arrows = IsKeyDown(KeyboardKey.Up) - IsKeyDown(KeyboardKey.Down);
     zoomModifier -= arrows * arrowFactor;
 
     camera.Zoom += zoomModifier;
+    camera.Zoom = Math.Max(camera.Zoom, 1e-2f);
 }
 
 void HandleEquationTextKeyInput()
@@ -162,63 +163,120 @@ void DrawGrid()
 {
     float s = camera.Zoom;
 
-    var (xRange, yRange) = GetAxisRange();
+    float H = GetScreenHeight();
+    float W = GetScreenWidth();
 
-    double OoM = Math.Pow(10.0, Math.Round(Math.Log((double)s * 32.0) / Math.Log(10.0)));
-    double scale = s / OoM;
-    
-    var l = (GetScreenHeight() / (2f * s)) * (centreAt.X - screenAspect * s);
-    var r = (GetScreenHeight() / (2f * s)) * (centreAt.X + screenAspect * s);
-
-    int xLoIdx = (int)Math.Ceiling(l * scale);
-    int xHiIdx = (int)Math.Ceiling(r * scale);
-
-    for (int xIdx = xLoIdx; xIdx < xHiIdx; xIdx++)
+    // lines
     {
-        float xAt = (float)(-l + (xIdx /scale));
-        Vector2 from = new Vector2(xAt, 0f);
-        Vector2 to   = new Vector2(xAt, GetScreenHeight());
+        double OoM = Math.Pow(10.0, Math.Round(Math.Log((double)s * 32.0) / Math.Log(10.0)));
+        double scale = s / OoM;
+        
+        var l = (H / (2f * s)) * (centreAt.X - screenAspect * s);
+        var r = (H / (2f * s)) * (centreAt.X + screenAspect * s);
 
-        float thick = 1f;
-        RL.Color color = (xIdx % 10) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
-        if (xIdx == 0)
+        int xLoIdx = (int)Math.Ceiling(l * scale);
+        int xHiIdx = (int)Math.Ceiling(r * scale);
+
+        for (int xIdx = xLoIdx; xIdx < xHiIdx; xIdx++)
         {
-            thick = 2f;
-            color = RL.Color.Black;
+            float xAt = (float)(-l + (xIdx / scale));
+            Vector2 from = new Vector2(xAt, 0f);
+            Vector2 to   = new Vector2(xAt, H);
+
+            float thick = 1f;
+            RL.Color color = (xIdx % 10) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
+            if (xIdx == 0)
+            {
+                thick = 2f;
+                color = RL.Color.Black;
+            }
+
+            DrawLineEx(from, to, thick, color);
         }
 
-        DrawLineEx(from, to, thick, color);
+        var b = (H / (2f * s)) * (centreAt.Y - s);
+        var t = (H / (2f * s)) * (centreAt.Y + s);
+
+        int yLoIdx = (int)Math.Ceiling(b * scale);
+        int yHiIdx = (int)Math.Ceiling(t * scale);
+
+        for (int yIdx = yLoIdx; yIdx < yHiIdx; yIdx++)
+        {
+            float yAt = H - (float)(-b + (yIdx / scale));
+            Vector2 from = new Vector2(0f, yAt);
+            Vector2 to   = new Vector2(GetScreenWidth(), yAt);
+
+            float thick = 1f;
+            RL.Color color = (yIdx % 8) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
+            if (yIdx == 0)
+            {
+                thick = 2f;
+                color = RL.Color.Black;
+            }
+
+            DrawLineEx(from, to, thick, color);
+        }
     }
 
-    var b = (GetScreenHeight() / (2f * s)) * (centreAt.Y - s);
-    var t = (GetScreenHeight() / (2f * s)) * (centreAt.Y + s);
-
-    int yLoIdx = (int)Math.Ceiling(b * scale);
-    int yHiIdx = (int)Math.Ceiling(t * scale);
-
-    // Console.WriteLine($"s:{s}   OoM:{OoM}   scale=OoM/s:{scale:F2}   ({xLoIdx}, {xHiIdx})    ({l:F2}, {r:F2})");
-
-    for (int yIdx = yLoIdx; yIdx < yHiIdx; yIdx++)
+    // ticks
     {
-        float yAt = GetScreenHeight() - (float)(-b + (yIdx /scale));
-        Vector2 from = new Vector2(0f, yAt);
-        Vector2 to   = new Vector2(GetScreenWidth(), yAt);
+        double lg = Math.Log((double)s * 1000) / Math.Log(10);
+        double OoM = Math.Pow(10, (int)lg);
 
-        float thick = 1f;
-        RL.Color color = (yIdx % 8) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
-        if (yIdx == 0)
-        {
-            thick = 2f;
-            color = RL.Color.Black;
+        double scale = s / OoM;
+
+        var l = (H / (2f * s)) * (centreAt.X - screenAspect * s);
+        var r = (H / (2f * s)) * (centreAt.X + screenAspect * s);
+        var b = (H / (2f * s)) * (centreAt.Y - s);
+        var t = (H / (2f * s)) * (centreAt.Y + s);
+
+        {        
+            int xLoIdx = (int)Math.Ceiling((l - 50) * scale);
+            int xHiIdx = (int)Math.Ceiling((r + 50) * scale);
+
+            var bClamp = Math.Clamp(b, -H, -FONT_SIZE);
+            var yAt = H + bClamp;
+
+            for (int xIdx = xLoIdx; xIdx < xHiIdx; xIdx++)
+            {
+                if (xIdx == 0)
+                {
+                    continue;
+                }
+
+                float  xAt = (float)(-l + (xIdx / scale));
+                float  val = (float)(xIdx / scale) * (2f * s) / H;
+                Vector2 at = new Vector2(xAt, yAt);
+
+                DrawTextEx(font, val.ToString("G2"), at, FONT_SIZE, 0f, RL.Color.DarkGray);
+            }
         }
 
-        DrawLineEx(from, to, thick, color);
+        {
+            int yLoIdx = (int)Math.Ceiling((b - 50) * scale);
+            int yHiIdx = (int)Math.Ceiling((t + 50) * scale);
+
+            var lClamp = Math.Clamp(-l, 0, W);
+            var xAt = lClamp;
+
+            for (int yIdx = yLoIdx; yIdx < yHiIdx; yIdx++)
+            {
+                if (yIdx == 0)
+                {
+                    continue;
+                }
+
+                float  yAt = H - (float)(-b + (yIdx / scale));
+                float  val = (float)(yIdx / scale) * (2f * s) / H;
+                string display = val.ToString("G2");
+                Vector2 extent = MeasureTextEx(font, display, FONT_SIZE, 0f);
+                Vector2 at = new Vector2(Math.Max(0f, xAt - extent.X), yAt);
+
+                DrawTextEx(font, display, at, FONT_SIZE, 0f, RL.Color.DarkGray);
+            }
+        }
     }
 
-    if (IsKeyPressed(KeyboardKey.RightShift))
-    {
-        Debugger.Break();
-    }
 }
 
 SetTargetFPS(60);
