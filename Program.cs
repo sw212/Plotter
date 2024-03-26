@@ -168,7 +168,7 @@ void DrawGrid()
 
     // lines
     {
-        double OoM = Math.Pow(10.0, Math.Round(Math.Log((double)s * 32.0) / Math.Log(10.0)));
+        double OoM = Math.Pow(10, Math.Round(Math.Log10((double)s * 32.0)));
         double scale = s / OoM;
         
         var l = (H / (2f * s)) * (centreAt.X - screenAspect * s);
@@ -207,7 +207,7 @@ void DrawGrid()
             Vector2 to   = new Vector2(GetScreenWidth(), yAt);
 
             float thick = 1f;
-            RL.Color color = (yIdx % 8) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
+            RL.Color color = (yIdx % 10) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
             if (yIdx == 0)
             {
                 thick = 2f;
@@ -220,10 +220,10 @@ void DrawGrid()
 
     // ticks
     {
-        double lg = Math.Log((double)s * 1000) / Math.Log(10);
+        double lg = Math.Log10((double)s);
         double OoM = Math.Pow(10, (int)lg);
 
-        double scale = s / OoM;
+        double scale = (2f * s) / (OoM * H);
 
         var l = (H / (2f * s)) * (centreAt.X - screenAspect * s);
         var r = (H / (2f * s)) * (centreAt.X + screenAspect * s);
