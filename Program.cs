@@ -3,7 +3,6 @@ using System.Numerics;
 using Raylib_cs;
 using RL = Raylib_cs;
 using static Raylib_cs.Raylib;
-using System.Diagnostics;
 
 const int screenWidth  = 800;
 const int screenHeight = 450;

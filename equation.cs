@@ -80,7 +80,7 @@ public static class Equation
         else if (equation is OperatorExpr operatorExpr)
         {
             Tok op = operatorExpr.Operator;
-            Tok[] allowedOps = [Tok.PLUS, Tok.MINUS, Tok.ASTERISK, Tok.SLASH];
+            Tok[] allowedOps = [Tok.PLUS, Tok.MINUS, Tok.ASTERISK, Tok.SLASH, Tok.CARET];
             bool validOp = allowedOps.Any(allowedOp => op == allowedOp);
             if (!allowedOps.Any(allowedOp => op == allowedOp))
             {
@@ -188,7 +188,15 @@ public static class Equation
         {
             string LHS = CompileExpr(operatorExpr.Left);
             string RHS = CompileExpr(operatorExpr.Right);
-            string result = $"({LHS} {Lexer.CharFromTok(operatorExpr.Operator)} {RHS})";
+            string result;
+            if (operatorExpr.Operator == Tok.CARET)
+            {
+                result = $"pow({LHS}, {RHS})";
+            }
+            else
+            {
+                result = $"({LHS} {Lexer.CharFromTok(operatorExpr.Operator)} {RHS})";
+            }
             return result;
         }
 

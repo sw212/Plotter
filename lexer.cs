@@ -7,6 +7,7 @@ public enum Tok
     MINUS,
     ASTERISK,
     SLASH,
+    CARET,
     VAR,
     NUMBER,
     EOF,
@@ -55,6 +56,7 @@ public class Lexer
             case Tok.MINUS:       { return "MINUS";       }
             case Tok.ASTERISK:    { return "ASTERISK";    }
             case Tok.SLASH:       { return "SLASH";       }
+            case Tok.CARET:       { return "CARET";       }
             case Tok.VAR:         { return "VAR";         }
             case Tok.NUMBER:      { return "NUMBER";      }
             case Tok.EOF:         { return "EOF";         }
@@ -74,6 +76,7 @@ public class Lexer
             case Tok.MINUS:       { return '-';  }
             case Tok.ASTERISK:    { return '*';  }
             case Tok.SLASH:       { return '/';  }
+            case Tok.CARET:       { return '^';  }
             default:              { return null; }
         }
     }

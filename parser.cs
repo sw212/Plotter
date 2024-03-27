@@ -96,6 +96,11 @@ public class Parser
                 return Precedence.PRODUCT;
             }
 
+            case Tok.CARET:
+            {
+                return Precedence.EXPONENT;
+            }
+
             case Tok.ASSIGN:
             {
                 return Precedence.ASSIGNMENT;
@@ -165,6 +170,13 @@ public class Parser
             {
                 Consume();
                 Expr right = ParseExpression(Precedence.PRODUCT);
+                result = new OperatorExpr(left, token.Type, right);
+            } break;
+
+            case Tok.CARET:
+            {
+                Consume();
+                Expr right = ParseExpression(Precedence.EXPONENT);
                 result = new OperatorExpr(left, token.Type, right);
             } break;
 
