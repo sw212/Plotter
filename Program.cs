@@ -168,8 +168,8 @@ void DrawGrid()
 
     // lines
     {
-        double OoM = Math.Pow(10, Math.Round(Math.Log10((double)s * 32.0)));
-        double scale = s / OoM;
+        double OoM = Math.Pow(10, Math.Round(Math.Log10((double)s / 10.0)));
+        double scale = (2f * s) / (OoM * H);
         
         var l = (H / (2f * s)) * (centreAt.X - screenAspect * s);
         var r = (H / (2f * s)) * (centreAt.X + screenAspect * s);
@@ -179,6 +179,11 @@ void DrawGrid()
 
         for (int xIdx = xLoIdx; xIdx < xHiIdx; xIdx++)
         {
+            if (xIdx == 0)
+            {
+                continue;
+            }
+
             float xAt = (float)(-l + (xIdx / scale));
             Vector2 from = new Vector2(xAt, 0f);
             Vector2 to   = new Vector2(xAt, H);
@@ -202,9 +207,14 @@ void DrawGrid()
 
         for (int yIdx = yLoIdx; yIdx < yHiIdx; yIdx++)
         {
+            if (yIdx == 0)
+            {
+                continue;
+            }
+
             float yAt = H - (float)(-b + (yIdx / scale));
             Vector2 from = new Vector2(0f, yAt);
-            Vector2 to   = new Vector2(GetScreenWidth(), yAt);
+            Vector2 to   = new Vector2(W, yAt);
 
             float thick = 1f;
             RL.Color color = (yIdx % 10) == 0 ? RL.Color.DarkGray : RL.Color.LightGray;
@@ -213,6 +223,30 @@ void DrawGrid()
                 thick = 2f;
                 color = RL.Color.Black;
             }
+
+            DrawLineEx(from, to, thick, color);
+        }
+
+        if (xLoIdx <= 0 && xHiIdx >= 0)
+        {
+            float xAt = -l;
+            Vector2 from = new Vector2(xAt, 0f);
+            Vector2 to   = new Vector2(xAt, H);
+
+            float thick = 2f;
+            RL.Color color = RL.Color.Black;
+
+            DrawLineEx(from, to, thick, color);
+        }
+
+        if (yLoIdx <= 0 && yHiIdx >= 0)
+        {
+            float yAt = H + b;
+            Vector2 from = new Vector2(0f, yAt);
+            Vector2 to   = new Vector2(W , yAt);
+
+            float thick = 2f;
+            RL.Color color = RL.Color.Black;
 
             DrawLineEx(from, to, thick, color);
         }
