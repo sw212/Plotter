@@ -92,6 +92,12 @@ public static class Equation
             }
         }
 
+        else if (equation is CallExpr callExpr)
+        {
+            // TODO: add function dependent argument count checks & function argument checks
+            return true;
+        }
+
         else
         {
             return false;
@@ -166,6 +172,11 @@ public static class Equation
             return result;
         }
 
+        else if (equation is NameExpr nameExpr)
+        {
+            return nameExpr.Name;
+        }
+
         else if (equation is VarExpr varExpr)
         {
             return varExpr.Name;
@@ -197,6 +208,21 @@ public static class Equation
             {
                 result = $"({LHS} {Lexer.CharFromTok(operatorExpr.Operator)} {RHS})";
             }
+            return result;
+        }
+
+        else if (equation is CallExpr callExpr)
+        {
+            List<string> compiledArguments = new List<string>();
+
+            for (int i = 0; i < callExpr.Arguments.Count; i++)
+            {
+                string arg = CompileExpr(callExpr.Arguments[i]);
+                compiledArguments.Add(arg);
+            }
+
+            string arguments = string.Join(", ", compiledArguments);
+            string result = $"{callExpr.Name}({arguments})";
             return result;
         }
 

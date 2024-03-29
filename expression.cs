@@ -23,6 +23,22 @@ public class VarExpr : Expr
     }
 }
 
+public class NameExpr : Expr
+{
+    public string Name;
+
+    public NameExpr(string name)
+    {
+        Name = name;
+    }
+
+    public override string Print(string s)
+    {
+        s += Name;
+        return s;
+    }
+}
+
 public class NumberExpr : Expr
 {
     public string Value;
@@ -101,4 +117,17 @@ public class OperatorExpr : Expr
         s += ")";
         return s;
     }
+}
+
+public class CallExpr: Expr
+{
+    public string Name;
+    public List<Expr> Arguments;
+
+    public CallExpr(string name, List<Expr> arguments)
+    {
+        Name = name;
+        Arguments = arguments;
+    }
+
 }

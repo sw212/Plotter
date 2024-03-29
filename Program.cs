@@ -31,7 +31,7 @@ Vector2 equationCompileExtent = MeasureTextEx(font, "Compile", FONT_SIZE, 0.0f);
 RL.Rectangle equationCompileRect = new RL.Rectangle(screenWidth - 10.0f - 10.0f - equationCompileExtent.X, 10.0f, equationCompileExtent.X + 10.0f, 30.0f);
 RL.Rectangle equationTextRect = new RL.Rectangle(10.0f, 10.0f, 300.0f, 30.0f);
 
-string equationText = "y = -4x * x + 2";
+string equationText = "y = sin(x)";
 Shader shader = new Shader();
 Equation.CompileEquation(ref shader, equationText);
 

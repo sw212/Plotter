@@ -1,5 +1,3 @@
-using System.Data;
-
 public class Parser
 {
     public List<Token> Tokens = new List<Token>();
@@ -106,6 +104,11 @@ public class Parser
                 return Precedence.ASSIGNMENT;
             }
 
+            case Tok.LEFT_PAREN:
+            {
+                return Precedence.CALL;
+            }
+
             default:
             {
                 return Precedence.LOWEST;
@@ -133,6 +136,11 @@ public class Parser
             {
                 result = ParseExpression(Precedence.LOWEST);
                 Consume(Tok.RIGHT_PAREN);
+            } break;
+
+            case Tok.FUNCTION:
+            {
+                result = new NameExpr(token.Text);
             } break;
 
             case Tok.MINUS:
@@ -192,6 +200,33 @@ public class Parser
                 else
                 {
                     throw new Exception("LHS of assignment must be a var expression");
+                }
+            } break;
+
+            case Tok.LEFT_PAREN:
+            {
+                Consume();
+
+                if (left is NameExpr nameExpr)
+                {
+                    List<Expr> arguments = new List<Expr>();
+
+                    if (!Match(Tok.RIGHT_PAREN))
+                    {
+                        do
+                        {
+                            Expr arg = ParseExpression(Precedence.LOWEST);
+                            arguments.Add(arg);
+                        } while(Match(Tok.COMMA));
+
+                        Consume(Tok.RIGHT_PAREN);
+                    }
+
+                    result = new CallExpr(nameExpr.Name, arguments);
+                }
+                else
+                {
+                    throw new Exception("LHS of call must be a name expression");
                 }
             } break;
         }

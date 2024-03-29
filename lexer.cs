@@ -10,6 +10,8 @@ public enum Tok
     CARET,
     VAR,
     NUMBER,
+    FUNCTION,
+    COMMA,
     EOF,
     TOK_COUNT,
 }
@@ -39,11 +41,15 @@ public class Token
     }
 }
 
+
+
 public class Lexer
 {
     public int Index;
     public string Text;
     public Dictionary<char, Tok> Punctuators = new Dictionary<char, Tok>();
+
+    public HashSet<string> Functions = new HashSet<string>();
 
     public static string StringFromTok(Tok tok)
     {
@@ -94,6 +100,18 @@ public class Lexer
                 Punctuators.Add(punctuator.Value, (Tok)i);
             }
         }
+
+        string[] functions =
+        {
+            "sin",
+            "cos",
+            "tan",
+        };
+        
+        foreach (string fn in functions)
+        {
+            Functions.Add(fn);
+        }
     }
 
     public Token Next()
@@ -126,7 +144,16 @@ public class Lexer
                 }
 
                 string name = Text.Substring(start, Index - start);
-                result = new Token(Tok.VAR, name);
+
+                if (Functions.Contains(name))
+                {
+                    result = new Token(Tok.FUNCTION, name);
+                }
+                else
+                {
+                    result = new Token(Tok.VAR, name);
+                }
+
                 break;
             }
             else if (Char.IsAsciiDigit(c) || c == '.')
@@ -151,6 +178,11 @@ public class Lexer
 
                 string name = Text.Substring(start, Index - start);
                 result = new Token(Tok.NUMBER, name);
+                break;
+            }
+            else if (c == ',')
+            {
+                result = new Token(Tok.COMMA, "");
                 break;
             }
         }
