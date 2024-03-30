@@ -12,13 +12,6 @@ const int FONT_SIZE = 20;
 
 double time = 0.0;
 
-Point axisX_Start = new Point(0, screenHeight/2);
-Point   axisX_End = new Point(screenWidth, screenHeight/2);
-
-Point axisY_Start = new Point(screenWidth/2, 0);
-Point   axisY_End = new Point(screenWidth/2, screenHeight);
-
-
 InitWindow(screenWidth, screenHeight, "Plotter");
 RenderTexture2D target = LoadRenderTexture(GetScreenWidth(), GetScreenHeight());
 
@@ -31,7 +24,7 @@ Vector2 equationCompileExtent = MeasureTextEx(font, "Compile", FONT_SIZE, 0.0f);
 RL.Rectangle equationCompileRect = new RL.Rectangle(screenWidth - 10.0f - 10.0f - equationCompileExtent.X, 10.0f, equationCompileExtent.X + 10.0f, 30.0f);
 RL.Rectangle equationTextRect = new RL.Rectangle(10.0f, 10.0f, 300.0f, 30.0f);
 
-string equationText = "y = sin(x)";
+string equationText = "y = x*sin(x)^2";
 Shader shader = new Shader();
 Equation.CompileEquation(ref shader, equationText);
 
@@ -136,26 +129,6 @@ void DrawEquationRects()
     yRange.Y += centreAt.Y;
 
     return (xRange, yRange);
-}
-
-void DrawAxis()
-{
-    DrawLine(axisX_Start.X, axisX_Start.Y, axisX_End.X, axisX_End.Y, RL.Color.Black);
-    DrawLine(axisY_Start.X, axisY_Start.Y, axisY_End.X, axisY_End.Y, RL.Color.Black);
-
-    var (xRange, yRange) = GetAxisRange();
-
-    string xLo = xRange[0].ToString("N1");
-    string xHi = xRange[1].ToString("N1");
-
-    string yLo = yRange[0].ToString("N1");
-    string yHi = yRange[1].ToString("N1");
-
-    DrawText(xLo, axisX_Start.X + 5, axisX_Start.Y + 5, 12, RL.Color.Black);
-    DrawText(xHi, axisX_End.X - 20, axisX_End.Y + 5, 12, RL.Color.Black);
-
-    DrawText(yHi, axisY_Start.X - 25, axisY_Start.Y + 5, 12, RL.Color.Black);
-    DrawText(yLo, axisY_End.X - 25, axisY_End.Y -15, 12, RL.Color.Black);
 }
 
 void DrawGrid()
@@ -263,10 +236,14 @@ void DrawGrid()
         var b = (H / (2f * s)) * (centreAt.Y - s);
         var t = (H / (2f * s)) * (centreAt.Y + s);
 
-        {        
-            int xLoIdx = (int)Math.Ceiling((l - 50) * scale);
-            int xHiIdx = (int)Math.Ceiling((r + 50) * scale);
+        int xLoIdx = (int)Math.Ceiling((l - 50) * scale);
+        int xHiIdx = (int)Math.Ceiling((r + 50) * scale);
 
+        int yLoIdx = (int)Math.Ceiling((b - 50) * scale);
+        int yHiIdx = (int)Math.Ceiling((t + 50) * scale);
+
+        // x axis
+        {        
             var bClamp = Math.Clamp(b, -H, -FONT_SIZE);
             var yAt = H + bClamp;
 
@@ -282,13 +259,21 @@ void DrawGrid()
                 Vector2 at = new Vector2(xAt, yAt);
 
                 DrawTextEx(font, val.ToString("G2"), at, FONT_SIZE, 0f, RL.Color.DarkGray);
+
+                if (yLoIdx <= 0 && yHiIdx >= 0)
+                {
+                    Vector2    tickAt = new Vector2(xAt, H + b);
+                    Vector2 tickDelta = new Vector2(0, 5);
+                    Vector2 tickStart = tickAt - tickDelta;
+                    Vector2   tickEnd = tickAt + tickDelta;
+
+                    DrawLineEx(tickStart, tickEnd, 3f, RL.Color.Black);
+                }
             }
         }
-
+        
+        // y axis
         {
-            int yLoIdx = (int)Math.Ceiling((b - 50) * scale);
-            int yHiIdx = (int)Math.Ceiling((t + 50) * scale);
-
             var lClamp = Math.Clamp(-l, 0, W);
             var xAt = lClamp;
 
@@ -303,9 +288,19 @@ void DrawGrid()
                 float  val = (float)(yIdx / scale) * (2f * s) / H;
                 string display = val.ToString("G2");
                 Vector2 extent = MeasureTextEx(font, display, FONT_SIZE, 0f);
-                Vector2 at = new Vector2(Math.Max(0f, xAt - extent.X), yAt);
+                Vector2 at = new Vector2(Math.Max(0f, xAt - extent.X - 2), yAt);
 
                 DrawTextEx(font, display, at, FONT_SIZE, 0f, RL.Color.DarkGray);
+
+                if (xLoIdx <= 0 && xHiIdx >= 0)
+                {
+                    Vector2    tickAt = new Vector2(-l, yAt);
+                    Vector2 tickDelta = new Vector2(5, 0);
+                    Vector2 tickStart = tickAt - tickDelta;
+                    Vector2   tickEnd = tickAt + tickDelta;
+
+                    DrawLineEx(tickStart, tickEnd, 3f, RL.Color.Black);
+                }                
             }
         }
     }
