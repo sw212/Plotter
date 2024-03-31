@@ -1,5 +1,4 @@
-﻿using System.Drawing;
-using System.Numerics;
+﻿using System.Numerics;
 using Raylib_cs;
 using RL = Raylib_cs;
 using static Raylib_cs.Raylib;
@@ -20,16 +19,22 @@ Font font = Utils.MakeFont("./resources/fonts/NotoSans.ttf", FONT_SIZE);
 Vector2 centreAt = new Vector2(0f, 0f);
 Camera2D camera = new Camera2D(offset: Vector2.Zero, target: Vector2.Zero, rotation: 0.0f, zoom: 1.0f);
 
+bool equationCompileBtnHot = false;
 Vector2 equationCompileExtent = MeasureTextEx(font, "Compile", FONT_SIZE, 0.0f);
 RL.Rectangle equationCompileRect = new RL.Rectangle(screenWidth - 10.0f - 10.0f - equationCompileExtent.X, 10.0f, equationCompileExtent.X + 10.0f, 30.0f);
 RL.Rectangle equationTextRect = new RL.Rectangle(10.0f, 10.0f, 300.0f, 30.0f);
 
-string equationText = "y = x*sin(x)^2";
+string equationText = "y = x*sin(4*x)^2*0.4";
 Shader shader = new Shader();
 Equation.CompileEquation(ref shader, equationText);
 
 void HandleNavigateInput()
 {
+    if (equationCompileBtnHot)
+    {
+        return;
+    }
+
     if (IsMouseButtonDown(MouseButton.Left))
     {
         Vector2 delta = GetMouseDelta();
@@ -85,11 +90,21 @@ void HandleEquationTextMouseInput()
     Vector2 mousePos = GetMousePosition();
     if (CheckCollisionPointRec(mousePos, equationCompileRect))
     {
+        if (IsMouseButtonPressed(MouseButton.Left))
+        {
+            equationCompileBtnHot = true;
+        }
+
         // NOTE: this is not how buttons should behave, but for now it will suffice
-        if (IsMouseButtonReleased(MouseButton.Left))
+        if (IsMouseButtonReleased(MouseButton.Left) && equationCompileBtnHot)
         {
             Equation.CompileEquation(ref shader, equationText);
+            equationCompileBtnHot = false;
         }
+    }
+    else if (IsMouseButtonReleased(MouseButton.Left))
+    {
+        equationCompileBtnHot = false;
     }
 }
 
@@ -109,9 +124,18 @@ void DrawEquationRects()
 
     // compile button
     {
-        DrawRectangleRec(equationCompileRect, RL.Color.DarkGray);
+        Vector2 mousePos = GetMousePosition();
+        bool mouseOver = CheckCollisionPointRec(mousePos, equationCompileRect);
+        RL.Color defaultBGColor = new RL.Color(55, 57, 58, 255);
+        RL.Color   hoverBGColor = RL.Color.LightGray;
+        RL.Color pressedBGColor = RL.Color.DarkGray;
+
+        RL.Color rectColor = equationCompileBtnHot ? pressedBGColor : mouseOver ? hoverBGColor : defaultBGColor;
+        RL.Color textColor = new RL.Color(255 - rectColor.R, 255 - rectColor.G, 255 - rectColor.B, 255);
+
+        DrawRectangleRec(equationCompileRect, rectColor);
         Vector2 textPos = new Vector2(equationCompileRect.X + 5, equationCompileRect.Y + 5);
-        DrawTextEx(font, "Compile", textPos, FONT_SIZE, 0.0f, RL.Color.LightGray);
+        DrawTextEx(font, "Compile", textPos, FONT_SIZE, 0.0f, textColor);
     }
 }
 
@@ -314,9 +338,9 @@ while(!WindowShouldClose())
     time += GetFrameTime();
 
     HandleZoomInput();
-    HandleNavigateInput();
-    HandleEquationTextKeyInput();
     HandleEquationTextMouseInput();
+    HandleEquationTextKeyInput();
+    HandleNavigateInput();
 
     BeginTextureMode(target);
     {
@@ -328,7 +352,6 @@ while(!WindowShouldClose())
     {
         ClearBackground(RL.Color.RayWhite);
         
-        // DrawAxis();
         DrawGrid();
         DrawEquationRects();
 

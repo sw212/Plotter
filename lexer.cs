@@ -166,7 +166,9 @@ public class Lexer
 
                 while(Index < Text.Length)
                 {
-                    if (Char.IsAsciiDigit(Text[Index]) || c == '.')
+                    c = Text[Index];
+
+                    if (Char.IsAsciiDigit(c) || c == '.')
                     {
                         Index++;
                     }

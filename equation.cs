@@ -59,7 +59,9 @@ public static class Equation
 
         else if (equation is NumberExpr numberExpr)
         {
-            return true;
+            int dotCount = numberExpr.Value.AsSpan().Count('.');
+            bool result = dotCount <= 1;
+            return result;
         }
 
         else if (equation is PrefixExpr prefixExpr)
