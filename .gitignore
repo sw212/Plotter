@@ -4,5 +4,6 @@ out/
 .vscode/
 
 todo.txt
+parser.ts
 tsconfig.json
 *.ipynb

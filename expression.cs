@@ -130,4 +130,20 @@ public class CallExpr: Expr
         Arguments = arguments;
     }
 
+    public override string Print(string s)
+    {
+        s += $"{Name}(";
+        for (int i = 0; i < Arguments.Count; i++)
+        {
+            var arg = Arguments[i];
+            s = arg.Print(s);
+            
+            if (i != (Arguments.Count - 1))
+            {
+                s += ", ";
+            }
+        }
+        s += ")";
+        return s;
+    }
 }

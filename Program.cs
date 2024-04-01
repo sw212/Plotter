@@ -95,7 +95,6 @@ void HandleEquationTextMouseInput()
             equationCompileBtnHot = true;
         }
 
-        // NOTE: this is not how buttons should behave, but for now it will suffice
         if (IsMouseButtonReleased(MouseButton.Left) && equationCompileBtnHot)
         {
             Equation.CompileEquation(ref shader, equationText);
